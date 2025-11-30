@@ -21,9 +21,16 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,7 +55,24 @@ fun HomeScreen(
 ) {
     val appPages by viewModel.appPages.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isMonochromeEnabled by viewModel.isMonochromeEnabled.collectAsState()
+    val showPermissionDialog by viewModel.showPermissionDialog.collectAsState()
     val context = LocalContext.current
+
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissPermissionDialog() },
+            title = { Text("Permission Required") },
+            text = { 
+                Text("To enable Monochrome mode, this app needs the 'Secure Settings' permission. You must grant this via ADB:\n\nadb shell pm grant ${context.packageName} android.permission.WRITE_SECURE_SETTINGS") 
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissPermissionDialog() }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -86,6 +110,21 @@ fun HomeScreen(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(16.dp)
+                )
+            }
+            
+            // Monochrome Toggle FAB
+            FloatingActionButton(
+                onClick = { viewModel.toggleMonochrome() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(24.dp),
+                containerColor = if (isMonochromeEnabled) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.surface,
+                contentColor = if (isMonochromeEnabled) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
+            ) {
+                Icon(
+                    imageVector = if (isMonochromeEnabled) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    contentDescription = "Toggle Monochrome"
                 )
             }
         }
